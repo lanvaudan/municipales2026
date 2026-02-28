@@ -1,7 +1,7 @@
 // Service Worker PWA Lanvaudan
 // Toujours à jour, privilégie le réseau, fallback cache basique
 
-const CACHE_NAME = 'lanvaudan-cache-v1';
+const CACHE_NAME = 'lanvaudan-cache-v2';
 
 self.addEventListener('install', (event) => {
     // Ne pas forcer le cache de tout au démarrage pour éviter les soucis de "pas à jour"
