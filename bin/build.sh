@@ -5,7 +5,7 @@
 cd "$(dirname "$0")/.."
 
 # Nom du binaire compilé
-APP_NAME="lanvaudan-app"
+APP_NAME="lanvaudan"
 
 echo "⚙️ Compilation de l'application Go..."
 
