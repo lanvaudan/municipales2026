@@ -1,0 +1,21 @@
+{
+  "name": "Unis pour Lanvaudan",
+  "short_name": "Lanvaudan 2026",
+  "description": "Campagne Municipale 2026 - Unis pour Lanvaudan",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf8e9",
+  "theme_color": "#faf8e9",
+  "icons": [
+    {
+      "src": "/assets/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

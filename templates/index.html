@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Unis pour Lanvaudan - MUNICIPALES 2026</title>
+
+    <!-- PWA & Mobile Web App Config -->
+    <link rel="manifest" href="/assets/manifest.json">
+    <meta name="theme-color" content="#faf8e9">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Lanvaudan 2026">
+    <link rel="apple-touch-icon" href="/assets/logo.png">
+
+    <!-- Font: Montserrat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- GSAP for Smooth Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #faf8e9;
+            --text-color: #174916;
+            --accent-color: #df9c0d;
+            --white: #ffffff;
+            --shadow: 0 10px 30px rgba(23, 73, 22, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Montserrat', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* --- Layout --- */
+        .page-wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        @media (min-width: 1100px) {
+            .page-wrapper {
+                flex-direction: row;
+                max-width: 1500px;
+                margin: 0 auto;
+            }
+        }
+
+        /* --- Sidebar / Logo Container --- */
+        .sidebar {
+            background-color: transparent;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            z-index: 10;
+        }
+
+        @media (min-width: 1100px) {
+            .sidebar {
+                width: 500px;
+                height: 100vh;
+                position: sticky;
+                top: 0;
+                align-self: flex-start;
+                padding: 2rem;
+            }
+        }
+
+        .logo-placeholder {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .logo-placeholder img {
+            width: 100%;
+            height: auto;
+        }
+
+        @media (min-width: 1100px) {
+            .logo-placeholder {
+                max-width: 500px;
+            }
+        }
+
+        /* --- Main Content Area --- */
+        .main-content {
+            flex: 1;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        @media (min-width: 1100px) {
+            .main-content {
+                padding: 4rem 2rem;
+            }
+        }
+
+        .container-blanc {
+            background-color: var(--white);
+            max-width: 900px;
+            width: 100%;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            margin-bottom: 4rem;
+        }
+
+        @media (min-width: 768px) {
+            .container-blanc {
+                padding: 4rem;
+            }
+        }
+
+        @media (max-width: 699px) {
+            .main-content {
+                padding: 0;
+            }
+
+            .container-blanc {
+                margin-bottom: 0;
+                border-radius: 0;
+                padding: 1.5rem 1rem;
+                box-shadow: none;
+            }
+        }
+
+        /* --- Typography & Elements --- */
+        h1 {
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            letter-spacing: 2px;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .intro-text {
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid rgba(23, 73, 22, 0.1);
+        }
+
+        .section-title {
+            color: var(--accent-color);
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* --- Engagements Grid --- */
+        .engagements-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        @media (min-width: 768px) {
+            .engagements-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .engagement-card {
+            padding: 1.5rem;
+            border-left: 4px solid var(--accent-color);
+            background: #fdfdfd;
+            transition: transform 0.3s ease;
+        }
+
+        .engagement-card:hover {
+            transform: translateX(5px);
+            background: var(--bg-color);
+        }
+
+        .eng-num {
+            font-weight: 800;
+            font-size: 0.9rem;
+            color: var(--accent-color);
+        }
+
+        .eng-title {
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .eng-breton {
+            font-style: italic;
+            font-weight: 400;
+            font-size: 0.9rem;
+            display: block;
+            margin-top: 2px;
+            opacity: 0.7;
+        }
+
+        .eng-list {
+            list-style: none;
+            font-size: 0.95rem;
+        }
+
+        .eng-list li {
+            margin-bottom: 0.5rem;
+            position: relative;
+            padding-left: 1.2rem;
+        }
+
+        .eng-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        /* --- Team Table --- */
+        .team-section {
+            margin-top: 4rem;
+        }
+
+        .team-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .team-table th {
+            text-align: left;
+            padding: 1rem;
+            background-color: var(--bg-color);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .team-table td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(23, 73, 22, 0.05);
+            font-size: 0.95rem;
+        }
+
+        .team-row:hover {
+            background-color: rgba(223, 156, 13, 0.03);
+        }
+
+        .candidate-num {
+            font-weight: 800;
+            color: var(--accent-color);
+            width: 40px;
+        }
+
+        .candidate-name {
+            font-weight: 700;
+        }
+
+        .candidate-info {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        /* --- Footer Style --- */
+        .footer-call {
+            margin-top: 4rem;
+            text-align: center;
+            border-top: 2px solid var(--accent-color);
+            padding-top: 3rem;
+        }
+
+        .footer-call h3 {
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .highlight-box {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 2rem;
+            border-radius: 4px;
+            margin: 2rem 0;
+            font-weight: 600;
+        }
+
+        /* --- GSAP Scroll indicator --- */
+        .scroll-progress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: var(--accent-color);
+            z-index: 1000;
+        }
+
+        /* --- Subscription Form & Popup --- */
+        .subscribe-form {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .subscribe-form h3 {
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .subscribe-form p.rgpd {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-bottom: 1rem;
+            line-height: 1.3;
+        }
+
+        .subscribe-form input[type="email"] {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid rgba(23, 73, 22, 0.2);
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            font-family: inherit;
+        }
+
+        .subscribe-form button {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .subscribe-form button:hover {
+            background-color: #c4880b;
+        }
+
+        @media (max-width: 1099px) {
+            .page-wrapper {
+                padding-bottom: 80px;
+                /* Space for the fixed footer */
+            }
+
+            .sidebar {
+                padding-bottom: 0;
+                /* Remove extra padding if any */
+            }
+
+            .subscribe-form {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                max-width: none;
+                background-color: var(--text-color);
+                color: var(--white);
+                padding: 0.8rem 1rem;
+                border-radius: 0;
+                box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.2);
+                z-index: 100;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                gap: 1rem;
+            }
+
+            .subscribe-form h3 {
+                margin: 0;
+                color: var(--white);
+                font-size: 1rem;
+                white-space: nowrap;
+                display: block;
+            }
+
+            @media (max-width: 600px) {
+                .subscribe-form h3 {
+                    display: none;
+                    /* Cache le titre sur smartphone pour l'input */
+                }
+            }
+
+            .subscribe-form p.rgpd {
+                display: none;
+            }
+
+            .subscribe-form form {
+                display: flex;
+                flex-direction: row;
+                width: 100%;
+                gap: 0.5rem;
+                margin: 0;
+            }
+
+            .subscribe-form input[type="email"] {
+                margin: 0;
+                flex: 1;
+                border: none;
+            }
+
+            .subscribe-form button {
+                width: auto;
+                margin: 0;
+                padding: 0.8rem 1.5rem;
+                white-space: nowrap;
+            }
+        }
+
+        #notification-popup {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--text-color);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            z-index: 9999;
+            font-weight: 600;
+            visibility: hidden;
+            opacity: 0;
+            border-left: 5px solid var(--accent-color);
+        }
+
+        #notification-popup.error {
+            border-left-color: #d9534f;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="scroll-progress" id="progressBar"></div>
+    <div id="notification-popup"></div>
+
+    <div class="page-wrapper">
+        <!-- Logo Area -->
+        <aside class="sidebar">
+            <div class="logo-placeholder" id="logoAnim">
+                <!-- Remplacer par l'URL de votre logo détouré -->
+                <img src="/assets/logo.png" alt="Logo Unis pour Lanvaudan" />
+            </div>
+
+            <!-- Formulaire d'inscription -->
+            <div class="subscribe-form reveal">
+                <h3>Suivre l'aventure</h3>
+                <p class="rgpd">Vos données sont collectées dans le cadre strict de cette élection (RGPD). Elles ne
+                    seront ni vendues ni partagées, et seront supprimées après le scrutin.</p>
+                <form id="subscribeForm">
+                    <input type="email" id="emailInput" name="email" placeholder="Votre adresse e-mail" required>
+                    <button type="submit">S'inscrire</button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="main-content">
+            <div class="container-blanc" id="mainContainer">
+
+                <header>
+                    <h1>Profession de foi — Élections municipales 2026</h1>
+                    <div class="hero-title">UNIS POUR LANVAUDAN</div>
+                    <div class="subtitle">UNANIT EVIT LANVODAN — Une équipe citoyenne, engagée et responsable</div>
+
+                    <div class="intro-text reveal">
+                        <p><strong>Chères Lanvaudanaises, chers Lanvaudanais,</strong></p>
+                        <br>
+                        <p>Les 15 et 22 mars 2026, vous élirez votre conseil municipal. Nous avons constitué une liste
+                            citoyenne, apolitique et participative, composée de femmes et d’hommes attachés à notre
+                            identité rurale et à notre cadre de vie. Notre projet s’articule autour de six engagements
+                            majeurs pour l'avenir de notre commune.</p>
+                    </div>
+                </header>
+
+                <section>
+                    <h2 class="section-title reveal">📑 Nos six engagements structurants</h2>
+
+                    <div class="engagements-grid">
+                        <!-- Card 1 -->
+                        <div class="engagement-card reveal">
+                            <span class="eng-num">01</span>
+                            <div class="eng-title">Transparence et démocratie locale<span
+                                    class="eng-breton">(Lec'hm'emañ ar bobl o tivizout)</span></div>
+                            <ul class="eng-list">
+                                <li><strong>Communication :</strong> Réunions publiques régulières et portail numérique
+                                    communal.</li>
+                                <li><strong>Participation :</strong> Consultations citoyennes sur les projets
+                                    structurants.</li>
+                                <li><strong>Rigueur :</strong> Information transparente sur les subventions et les
+                                    décisions budgétaires.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Card 2 -->
+                        <div class="engagement-card reveal">
+                            <span class="eng-num">02</span>
+                            <div class="eng-title">École, jeunesse et sport<span class="eng-breton">(Yaouankiz ha
+                                    sport)</span></div>
+                            <ul class="eng-list">
+                                <li><strong>Aménagements :</strong> Création d'une aire de jeux adaptée et
+                                    revégétalisation de la cour d'école.</li>
+                                <li><strong>Dynamisme :</strong> Soutien aux projets éducatifs et création d'un club
+                                    sportif local.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Card 3 -->
+                        <div class="engagement-card reveal">
+                            <span class="eng-num">03</span>
+                            <div class="eng-title">Solidarités et cohésion sociale<span class="eng-breton">(Soudarded ha
+                                    kenstag)</span></div>
+                            <ul class="eng-list">
+                                <li><strong>Séniors :</strong> Sécuriser l'accès aux services (repas à domicile,
+                                    accompagnement).</li>
+                                <li><strong>Lien social :</strong> Organisation d'un forum annuel des associations.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Card 4 -->
+                        <div class="engagement-card reveal">
+                            <span class="eng-num">04</span>
+                            <div class="eng-title">Économie locale et Agriculture<span class="eng-breton">(Labour-douar
+                                    hag armerzh)</span></div>
+                            <ul class="eng-list">
+                                <li><strong>Proximité :</strong> Soutien aux circuits courts et dynamisation du marché
+                                    du mardi.</li>
+                                <li><strong>Santé :</strong> Démarches pour attirer et accueillir des professionnels de
+                                    santé.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Card 5 -->
+                        <div class="engagement-card reveal">
+                            <span class="eng-num">05</span>
+                            <div class="eng-title">Sécurité et cadre de vie<span class="eng-breton">(Diwall ha beviñ
+                                    mat)</span></div>
+                            <ul class="eng-list">
+                                <li><strong>Sécurité routière :</strong> Dispositifs de ralentissement et sécurisation
+                                    des zones à risque.</li>
+                                <li><strong>Eaux & Voirie :</strong> Plan d'entretien des fossés et traitement des
+                                    inondations.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Card 6 -->
+                        <div class="engagement-card reveal">
+                            <span class="eng-num">06</span>
+                            <div class="eng-title">Une voix forte à Lorient Agglomération<span class="eng-breton">(Ur
+                                    vouezh kreñv)</span></div>
+                            <ul class="eng-list">
+                                <li><strong>Défense de la ruralité :</strong> Faire respecter les spécificités de
+                                    Lanvaudan.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="team-section">
+                    <h2 class="section-title reveal">Notre Équipe : Unis pour Lanvaudan</h2>
+                    <p class="reveal">Une équipe représentative de la diversité de notre commune.</p>
+
+                    <table class="team-table reveal">
+                        <thead>
+                            <tr>
+                                <th>N°</th>
+                                <th>Nom & Prénom</th>
+                                <th>Profession & Lieu-dit</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teamBody">
+                            <!-- JS will populate or we keep static for SEO -->
+                        </tbody>
+                    </table>
+                </section>
+
+                <footer class="footer-call reveal">
+                    <h3>NOTRE MÉTHODE : ÉCOUTE, PRÉSENCE, RIGUEUR</h3>
+                    <p>Nous ne promettons pas l'impossible. Nous proposons du sérieux, de la responsabilité et du
+                        dialogue.</p>
+
+                    <div class="highlight-box">
+                        PRÉSERVONS L’IDENTITÉ DE LANVAUDAN ET PRÉPARONS SON AVENIR.
+                    </div>
+                </footer>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Candidates Data
+        const candidates = [
+            { id: 1, name: "Jane MANTRANT", info: "Diplômée notaire, expert immobilier" },
+            { id: 2, name: "Alain LE NOC", info: "Commandant de la Marine en retraite" },
+            { id: 3, name: "Nadine LE BRIS", info: "Aide à domicile" },
+            { id: 4, name: "Gildas CERF", info: "Chef d'équipe" },
+            { id: 5, name: "Nolwenn LE GLEUT", info: "Aide médico-psychologique" },
+            { id: 6, name: "Daniel JEGO", info: "Technicien en retraite, sonneur de cornemuse" },
+            { id: 7, name: "Marlène ROLLAND", info: "Ass. de direction trilingue, Co-présidente Lanvaudan Transition" },
+            { id: 8, name: "Yann BATAILLON", info: "Cadre en restauration" },
+            { id: 9, name: "Julie LEFRANÇOIS", info: "Fonctionnaire service Ressources-humaines" },
+            { id: 10, name: "Jean-Michel BERNON", info: "Dessinateur bâtiment, artiste peintre" },
+            { id: 11, name: "Colette ROLAND", info: "Commerciale en retraite" },
+            { id: 12, name: "Joselito IGLESIAS", info: "Coupeur de verre" },
+            { id: 13, name: "Martine HANNIC", info: "Soudeuse, câbleuse" }
+        ];
+
+        // Populate Table
+        const teamBody = document.getElementById('teamBody');
+        candidates.forEach(c => {
+            const row = document.createElement('tr');
+            row.className = 'team-row';
+            row.innerHTML = `
+                <td class="candidate-num">${c.id}</td>
+                <td class="candidate-name">${c.name}</td>
+                <td class="candidate-info">${c.info}</td>
+            `;
+            teamBody.appendChild(row);
+        });
+
+        // GSAP Animations
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Smooth reveal for sections
+        gsap.utils.toArray('.reveal').forEach((elem) => {
+            gsap.fromTo(elem,
+                { opacity: 0, y: 30 },
+                {
+                    opacity: 1,
+                    y: 0,
+                    duration: 1,
+                    ease: "power2.out",
+                    scrollTrigger: {
+                        trigger: elem,
+                        start: "top 85%",
+                        toggleActions: "play none none none"
+                    }
+                }
+            );
+        });
+
+        // Logo Floating animation
+        // gsap.to("#logoAnim", {
+        //     y: 10,
+        //     duration: 2,
+        //     repeat: -1,
+        //     yoyo: true,
+        //     ease: "sine.inOut"
+        // });
+
+        // Scroll Progress Bar
+        gsap.to("#progressBar", {
+            width: "100%",
+            ease: "none",
+            scrollTrigger: {
+                trigger: "body",
+                start: "top top",
+                end: "bottom bottom",
+                scrub: 0.3
+            }
+        });
+
+        // Smooth Scroll Logic (Too fluid)
+        // Note: Using standard CSS scroll-behavior: smooth is often enough,
+        // but for GSAP control:
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                gsap.to(window, { duration: 1.5, scrollTo: this.getAttribute('href'), ease: "power4.out" });
+            });
+        });
+
+        // AJAX Form Submission
+        const subscribeForm = document.getElementById('subscribeForm');
+        const emailInput = document.getElementById('emailInput');
+        const notifPopup = document.getElementById('notification-popup');
+
+        if (subscribeForm) {
+            subscribeForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const btn = subscribeForm.querySelector('button');
+                btn.disabled = true;
+                const originalText = btn.textContent;
+                btn.textContent = "Patientez...";
+
+                try {
+                    const formData = new FormData();
+                    formData.append('email', emailInput.value);
+
+                    const response = await fetch('/subscribe', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    let result = null;
+                    try {
+                        result = await response.json();
+                    } catch (err) {
+                        console.error("Non-JSON response", err);
+                    }
+
+                    if (response.ok) {
+                        showNotification(result?.message || "Inscription réussie !", "success");
+                        emailInput.value = '';
+                    } else {
+                        showNotification(result?.error || "Une erreur est survenue", "error");
+                    }
+                } catch (error) {
+                    showNotification("Erreur de connexion", "error");
+                } finally {
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            });
+        }
+
+        function showNotification(message, type) {
+            notifPopup.textContent = message;
+
+            if (type === 'error') {
+                notifPopup.classList.add('error');
+            } else {
+                notifPopup.classList.remove('error');
+            }
+
+            // GSAP Timeline for notification
+            const tl = gsap.timeline();
+            tl.set(notifPopup, { visibility: 'visible', y: 50, opacity: 0 })
+                .to(notifPopup, { y: 0, opacity: 1, duration: 0.4, ease: "back.out(1.7)" })
+                .to(notifPopup, { y: -50, opacity: 0, duration: 0.4, ease: "power2.in", delay: 3 })
+                .set(notifPopup, { visibility: 'hidden' });
+        }
+
+        // --- PWA Service Worker Registration ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/assets/sw.js').then(registration => {
+                    console.log('SW registered: ', registration.scope);
+                }).catch(registrationError => {
+                    console.log('SW registration failed: ', registrationError);
+                });
+            });
+        }
+    </script>
+</body>
+
+</html>
