@@ -505,106 +505,34 @@
             <div class="container-blanc" id="mainContainer">
 
                 <header>
-                    <h1>Élections municipales 2026</h1>
-                    <div class="hero-title">UNIS POUR LANVAUDAN</div>
-                    <div class="subtitle">UNANIT EVIT LANVODAN — Une équipe citoyenne, engagée et responsable</div>
+                    <h1>{{.PageTitle}}</h1>
+                    <div class="hero-title">{{.HeroTitle}}</div>
+                    <div class="subtitle">{{.Subtitle}}</div>
 
-                    <div class="intro-text reveal">
-                        <p><strong>Chères Lanvaudanaises, chers Lanvaudanais,</strong></p>
-                        <br>
-                        <p>Les 15 et 22 mars 2026, vous élirez votre conseil municipal. Nous avons constitué une liste
-                            citoyenne, apolitique et participative, composée de femmes et d’hommes attachés à notre
-                            identité rurale et à notre cadre de vie. Notre projet s’articule autour de six engagements
-                            majeurs pour l'avenir de notre commune.</p>
-                    </div>
+                    <div class="intro-text reveal">{{.IntroText}}</div>
                 </header>
 
                 <section>
                     <h2 class="section-title reveal">Nos six engagements structurants</h2>
 
                     <div class="engagements-grid">
-                        <!-- Card 1 -->
+                        {{range .Engagements}}
                         <div class="engagement-card reveal">
-                            <span class="eng-num">01</span>
-                            <div class="eng-title">Transparence et démocratie locale<span
-                                    class="eng-breton">(Lec'hm'emañ ar bobl o tivizout)</span></div>
+                            <span class="eng-num">{{.Num}}</span>
+                            <div class="eng-title">{{.Title}}<span class="eng-breton">{{.Breton}}</span></div>
                             <ul class="eng-list">
-                                <li><strong>Communication :</strong> Réunions publiques régulières et portail numérique
-                                    communal.</li>
-                                <li><strong>Participation :</strong> Consultations citoyennes sur les projets
-                                    structurants.</li>
-                                <li><strong>Rigueur :</strong> Information transparente sur les subventions et les
-                                    décisions budgétaires.</li>
+                                {{range .Items}}
+                                <li><strong>{{.Label}} :</strong> {{.Text}}</li>
+                                {{end}}
                             </ul>
                         </div>
-
-                        <!-- Card 2 -->
-                        <div class="engagement-card reveal">
-                            <span class="eng-num">02</span>
-                            <div class="eng-title">École, jeunesse et sport<span class="eng-breton">(Yaouankiz ha
-                                    sport)</span></div>
-                            <ul class="eng-list">
-                                <li><strong>Aménagements :</strong> Création d'une aire de jeux adaptée et
-                                    revégétalisation de la cour d'école.</li>
-                                <li><strong>Dynamisme :</strong> Soutien aux projets éducatifs et création d'un club
-                                    sportif local.</li>
-                            </ul>
-                        </div>
-
-                        <!-- Card 3 -->
-                        <div class="engagement-card reveal">
-                            <span class="eng-num">03</span>
-                            <div class="eng-title">Solidarités et cohésion sociale<span class="eng-breton">(Soudarded ha
-                                    kenstag)</span></div>
-                            <ul class="eng-list">
-                                <li><strong>Séniors :</strong> Sécuriser l'accès aux services (repas à domicile,
-                                    accompagnement).</li>
-                                <li><strong>Lien social :</strong> Organisation d'un forum annuel des associations.</li>
-                            </ul>
-                        </div>
-
-                        <!-- Card 4 -->
-                        <div class="engagement-card reveal">
-                            <span class="eng-num">04</span>
-                            <div class="eng-title">Économie locale et Agriculture<span class="eng-breton">(Labour-douar
-                                    hag armerzh)</span></div>
-                            <ul class="eng-list">
-                                <li><strong>Proximité :</strong> Soutien aux circuits courts et dynamisation du marché
-                                    du mardi.</li>
-                                <li><strong>Santé :</strong> Démarches pour attirer et accueillir des professionnels de
-                                    santé.</li>
-                            </ul>
-                        </div>
-
-                        <!-- Card 5 -->
-                        <div class="engagement-card reveal">
-                            <span class="eng-num">05</span>
-                            <div class="eng-title">Sécurité et cadre de vie<span class="eng-breton">(Diwall ha beviñ
-                                    mat)</span></div>
-                            <ul class="eng-list">
-                                <li><strong>Sécurité routière :</strong> Dispositifs de ralentissement et sécurisation
-                                    des zones à risque.</li>
-                                <li><strong>Eaux & Voirie :</strong> Plan d'entretien des fossés et traitement des
-                                    inondations.</li>
-                            </ul>
-                        </div>
-
-                        <!-- Card 6 -->
-                        <div class="engagement-card reveal">
-                            <span class="eng-num">06</span>
-                            <div class="eng-title">Une voix forte à Lorient Agglomération<span class="eng-breton">(Ur
-                                    vouezh kreñv)</span></div>
-                            <ul class="eng-list">
-                                <li><strong>Défense de la ruralité :</strong> Faire respecter les spécificités de
-                                    Lanvaudan.</li>
-                            </ul>
-                        </div>
+                        {{end}}
                     </div>
                 </section>
 
                 <section class="team-section">
                     <h2 class="section-title reveal">Notre Équipe : Unis pour Lanvaudan</h2>
-                    <p class="reveal">Une équipe représentative de la diversité de notre commune.</p>
+                    <p class="reveal">{{.TeamIntro}}</p>
 
                     <table class="team-table reveal">
                         <thead>
@@ -614,20 +542,23 @@
                                 <th>Profession & Lieu-dit</th>
                             </tr>
                         </thead>
-                        <tbody id="teamBody">
-                            <!-- JS will populate or we keep static for SEO -->
+                        <tbody>
+                            {{range .Candidates}}
+                            <tr class="team-row">
+                                <td class="candidate-num">{{.ID}}</td>
+                                <td class="candidate-name">{{.Name}}</td>
+                                <td class="candidate-info">{{.Info}}</td>
+                            </tr>
+                            {{end}}
                         </tbody>
                     </table>
                 </section>
 
                 <footer class="footer-call reveal">
-                    <h3>NOTRE MÉTHODE : ÉCOUTE, PRÉSENCE, RIGUEUR</h3>
-                    <p>Nous ne promettons pas l'impossible. Nous proposons du sérieux, de la responsabilité et du
-                        dialogue.</p>
+                    <h3>{{.FooterTitle}}</h3>
+                    <p>{{.FooterText}}</p>
 
-                    <div class="highlight-box">
-                        PRÉSERVONS L’IDENTITÉ DE LANVAUDAN ET PRÉPARONS SON AVENIR.
-                    </div>
+                    <div class="highlight-box">{{.HighlightBox}}</div>
                 </footer>
 
             </div>
@@ -635,36 +566,6 @@
     </div>
 
     <script>
-        // Candidates Data
-        const candidates = [
-            { id: 1, name: "Jane MANTRANT", info: "Diplômée notaire, expert immobilier" },
-            { id: 2, name: "Alain LE NOC", info: "Commandant de la Marine en retraite" },
-            { id: 3, name: "Nadine LE BRIS", info: "Aide à domicile" },
-            { id: 4, name: "Gildas CERF", info: "Chef d'équipe" },
-            { id: 5, name: "Nolwenn LE GLEUT", info: "Aide médico-psychologique" },
-            { id: 6, name: "Daniel JEGO", info: "Technicien en retraite, sonneur de cornemuse" },
-            { id: 7, name: "Marlène ROLLAND", info: "Ass. de direction trilingue, Co-présidente Lanvaudan Transition" },
-            { id: 8, name: "Yann BATAILLON", info: "Cadre en restauration" },
-            { id: 9, name: "Julie LEFRANÇOIS", info: "Fonctionnaire service Ressources-humaines" },
-            { id: 10, name: "Jean-Michel BERNON", info: "Dessinateur bâtiment, artiste peintre" },
-            { id: 11, name: "Colette ROLAND", info: "Commerciale en retraite" },
-            { id: 12, name: "Joselito IGLESIAS", info: "Coupeur de verre" },
-            { id: 13, name: "Martine HANNIC", info: "Soudeuse, câbleuse" }
-        ];
-
-        // Populate Table
-        const teamBody = document.getElementById('teamBody');
-        candidates.forEach(c => {
-            const row = document.createElement('tr');
-            row.className = 'team-row';
-            row.innerHTML = `
-                <td class="candidate-num">${c.id}</td>
-                <td class="candidate-name">${c.name}</td>
-                <td class="candidate-info">${c.info}</td>
-            `;
-            teamBody.appendChild(row);
-        });
-
         // GSAP Animations
         gsap.registerPlugin(ScrollTrigger);
 

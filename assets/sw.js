@@ -29,7 +29,7 @@ self.addEventListener('fetch', (event) => {
     // Cela garantit que la PWA est "toujours à jour" tant qu'il y a du réseau.
     
     // On ignore les requêtes vers l'API d'abonnement pour ne pas les cacher
-    if (event.request.url.includes('/subscribe')) {
+    if (event.request.url.includes('/subscribe') || event.request.url.includes('/bureau')) {
         return;
     }
 

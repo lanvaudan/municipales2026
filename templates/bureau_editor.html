@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bureau — Éditeur</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #faf8e9;
+            --text-color: #174916;
+            --accent-color: #df9c0d;
+            --shadow: 0 10px 30px rgba(23,73,22,0.08);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Montserrat', sans-serif;
+            padding-top: 56px;
+            padding-bottom: 64px;
+            min-height: 100vh;
+        }
+
+        /* --- Top bar --- */
+        .topbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 56px;
+            background: var(--text-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            gap: 1rem;
+            z-index: 100;
+        }
+        .topbar .brand {
+            font-weight: 800;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            flex: 1;
+        }
+        .topbar .tabs { display: flex; gap: 0.25rem; }
+        .tab-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.35rem 0.9rem;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .tab-btn.active { background: var(--accent-color); border-color: var(--accent-color); }
+        .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.1); }
+        .logout-link {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.4);
+            color: white;
+            padding: 0.35rem 0.9rem;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .logout-link:hover { background: rgba(255,255,255,0.1); }
+
+        /* --- Content area --- */
+        .editor-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* --- Form fields --- */
+        .field-group { margin-bottom: 1.5rem; }
+        label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.4rem;
+            opacity: 0.65;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 0.7rem;
+            border: 1px solid rgba(23,73,22,0.2);
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            background: white;
+        }
+        textarea { resize: vertical; min-height: 80px; }
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        /* --- Quill overrides --- */
+        .ql-toolbar { border-radius: 4px 4px 0 0; border-color: rgba(23,73,22,0.2) !important; }
+        .ql-container.ql-snow { border-color: rgba(23,73,22,0.2) !important; border-radius: 0 0 4px 4px; font-family: 'Montserrat', sans-serif; font-size: 0.95rem; }
+        .ql-editor { min-height: 120px; }
+
+        /* --- Engagement cards --- */
+        .eng-card {
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-color);
+            margin-bottom: 1rem;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        .eng-card-header {
+            padding: 0.9rem 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            user-select: none;
+        }
+        .eng-card-header:hover { background: rgba(223,156,13,0.04); }
+        .eng-num-badge {
+            background: var(--accent-color);
+            color: white;
+            padding: 0.15rem 0.5rem;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+        .eng-card-label { font-size: 0.95rem; }
+        .eng-chevron { margin-left: auto; opacity: 0.4; font-size: 0.8rem; }
+        .eng-card-body {
+            padding: 0 1.2rem 1.2rem;
+            border-top: 1px solid rgba(23,73,22,0.05);
+            display: none;
+        }
+        .eng-card.open .eng-card-body { display: block; }
+        .eng-card.open .eng-chevron { transform: rotate(180deg); }
+
+        /* --- Item rows --- */
+        .items-list { margin-bottom: 0.75rem; }
+        .item-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            align-items: center;
+        }
+        .item-row input[type="text"] { margin: 0; }
+        .item-row .label-input { width: 28%; }
+        .item-row .text-input { flex: 1; }
+
+        /* --- Buttons --- */
+        .remove-btn {
+            background: #fdecea;
+            border: none;
+            color: #d9534f;
+            padding: 0.45rem 0.65rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+        .remove-btn:hover { background: #f5c6c5; }
+        .add-btn {
+            width: 100%;
+            background: var(--bg-color);
+            border: 1px dashed rgba(23,73,22,0.3);
+            color: var(--text-color);
+            padding: 0.45rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+        }
+        .add-btn:hover { background: rgba(223,156,13,0.08); border-color: var(--accent-color); }
+
+        /* --- Team edit table --- */
+        .team-edit-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1rem;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        .team-edit-table th {
+            text-align: left;
+            padding: 0.7rem 0.6rem;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.6;
+            background: var(--bg-color);
+        }
+        .team-edit-table td { padding: 0.35rem 0.4rem; vertical-align: middle; }
+        .team-edit-table input[type="text"] { margin: 0; padding: 0.45rem 0.6rem; font-size: 0.9rem; }
+        .num-cell {
+            width: 40px;
+            text-align: center;
+            font-weight: 800;
+            color: var(--accent-color);
+            font-size: 0.9rem;
+        }
+
+        /* --- Bottom bar --- */
+        .bottombar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: 64px;
+            background: white;
+            border-top: 1px solid rgba(23,73,22,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 1.5rem;
+            gap: 1rem;
+            z-index: 100;
+        }
+        .save-status { font-size: 0.85rem; opacity: 0.6; }
+        .save-status.ok { color: #3a7d44; opacity: 1; font-weight: 600; }
+        .save-status.err { color: #d9534f; opacity: 1; font-weight: 600; }
+        .save-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.7rem 2rem;
+            border-radius: 4px;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .save-btn:hover { background: #c4880b; }
+        .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <nav class="topbar">
+        <span class="brand">Bureau · Unis pour Lanvaudan</span>
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="textes">Textes</button>
+            <button class="tab-btn" data-tab="engagements">Engagements</button>
+            <button class="tab-btn" data-tab="equipe">Équipe</button>
+        </div>
+        <a href="/bureau/logout" class="logout-link">Se déconnecter</a>
+    </nav>
+
+    <div class="editor-content">
+
+        <!-- TAB: Textes -->
+        <div id="panel-textes" class="tab-panel active">
+            <div class="field-group">
+                <label>Titre de page (balise h1)</label>
+                <input type="text" id="f-page-title">
+            </div>
+            <div class="field-group">
+                <label>Titre principal (hero)</label>
+                <input type="text" id="f-hero-title">
+            </div>
+            <div class="field-group">
+                <label>Sous-titre</label>
+                <input type="text" id="f-subtitle">
+            </div>
+            <div class="field-group">
+                <label>Texte d'introduction (riche)</label>
+                <div id="quill-editor"></div>
+            </div>
+            <div class="field-group">
+                <label>Intro équipe</label>
+                <input type="text" id="f-team-intro">
+            </div>
+            <div class="field-group">
+                <label>Titre pied de page</label>
+                <input type="text" id="f-footer-title">
+            </div>
+            <div class="field-group">
+                <label>Texte pied de page</label>
+                <textarea id="f-footer-text"></textarea>
+            </div>
+            <div class="field-group">
+                <label>Encart highlight</label>
+                <input type="text" id="f-highlight-box">
+            </div>
+        </div>
+
+        <!-- TAB: Engagements -->
+        <div id="panel-engagements" class="tab-panel">
+            <div id="engagements-container"></div>
+        </div>
+
+        <!-- TAB: Équipe -->
+        <div id="panel-equipe" class="tab-panel">
+            <table class="team-edit-table">
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>Nom &amp; Prénom</th>
+                        <th>Profession &amp; Lieu-dit</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="team-edit-body"></tbody>
+            </table>
+            <button class="add-btn" id="add-candidate-btn">+ Ajouter un candidat</button>
+        </div>
+
+    </div>
+
+    <div class="bottombar">
+        <span class="save-status" id="save-status"></span>
+        <button class="save-btn" id="save-btn">Enregistrer</button>
+    </div>
+
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <script>
+        const initialData = {{.ContentJSON}};
+
+        // --- Quill ---
+        const quill = new Quill('#quill-editor', {
+            theme: 'snow',
+            modules: {
+                toolbar: [['bold', 'italic'], [{ list: 'ordered' }, { list: 'bullet' }]]
+            }
+        });
+
+        // --- Tabs ---
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        // --- Load data ---
+        function loadData(data) {
+            document.getElementById('f-page-title').value = data.page_title || '';
+            document.getElementById('f-hero-title').value = data.hero_title || '';
+            document.getElementById('f-subtitle').value = data.subtitle || '';
+            quill.root.innerHTML = data.intro_text || '';
+            document.getElementById('f-team-intro').value = data.team_intro || '';
+            document.getElementById('f-footer-title').value = data.footer_title || '';
+            document.getElementById('f-footer-text').value = data.footer_text || '';
+            document.getElementById('f-highlight-box').value = data.highlight_box || '';
+            renderEngagements(data.engagements || []);
+            renderTeam(data.candidates || []);
+        }
+
+        // --- Engagements ---
+        function renderEngagements(engs) {
+            const container = document.getElementById('engagements-container');
+            container.innerHTML = '';
+            engs.forEach((eng) => {
+                const card = document.createElement('div');
+                card.className = 'eng-card';
+                card.innerHTML =
+                    '<div class="eng-card-header">' +
+                        '<span class="eng-num-badge">' + esc(eng.num) + '</span>' +
+                        '<span class="eng-card-label">' + esc(eng.title) + '</span>' +
+                        '<span class="eng-chevron">▼</span>' +
+                    '</div>' +
+                    '<div class="eng-card-body">' +
+                        '<div class="field-group" style="margin-top:1rem">' +
+                            '<label>Titre</label>' +
+                            '<input type="text" class="eng-title" value="' + esc(eng.title) + '">' +
+                        '</div>' +
+                        '<div class="field-group">' +
+                            '<label>Traduction bretonne</label>' +
+                            '<input type="text" class="eng-breton" value="' + esc(eng.breton) + '">' +
+                        '</div>' +
+                        '<div class="field-group">' +
+                            '<label>Items</label>' +
+                            '<div class="items-list"></div>' +
+                            '<button class="add-btn add-item-btn">+ Ajouter un item</button>' +
+                        '</div>' +
+                    '</div>';
+                container.appendChild(card);
+
+                // Sync label on title change
+                card.querySelector('.eng-title').addEventListener('input', function() {
+                    card.querySelector('.eng-card-label').textContent = this.value;
+                });
+                // Toggle collapse
+                card.querySelector('.eng-card-header').addEventListener('click', function() {
+                    card.classList.toggle('open');
+                });
+                // Render items
+                const itemsList = card.querySelector('.items-list');
+                (eng.items || []).forEach(function(item) { addItemRow(itemsList, item.label, item.text); });
+                card.querySelector('.add-item-btn').addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    addItemRow(itemsList, '', '');
+                });
+            });
+        }
+
+        function addItemRow(container, label, text) {
+            const row = document.createElement('div');
+            row.className = 'item-row';
+            row.innerHTML =
+                '<input type="text" class="label-input" placeholder="Label" value="' + esc(label) + '">' +
+                '<input type="text" class="text-input" placeholder="Texte" value="' + esc(text) + '">' +
+                '<button class="remove-btn" title="Supprimer">✕</button>';
+            row.querySelector('.remove-btn').addEventListener('click', function() { row.remove(); });
+            container.appendChild(row);
+        }
+
+        // --- Team ---
+        function renderTeam(candidates) {
+            const tbody = document.getElementById('team-edit-body');
+            tbody.innerHTML = '';
+            candidates.forEach(function(c) { addCandidateRow(c.name, c.info); });
+        }
+
+        function addCandidateRow(name, info) {
+            const tbody = document.getElementById('team-edit-body');
+            const tr = document.createElement('tr');
+            const num = tbody.rows.length + 1;
+            tr.innerHTML =
+                '<td class="num-cell">' + num + '</td>' +
+                '<td><input type="text" class="cand-name" value="' + esc(name) + '"></td>' +
+                '<td><input type="text" class="cand-info" value="' + esc(info) + '"></td>' +
+                '<td><button class="remove-btn" title="Supprimer">✕</button></td>';
+            tr.querySelector('.remove-btn').addEventListener('click', function() {
+                tr.remove();
+                renumberCandidates();
+            });
+            tbody.appendChild(tr);
+        }
+
+        function renumberCandidates() {
+            document.querySelectorAll('#team-edit-body .num-cell').forEach(function(cell, i) {
+                cell.textContent = i + 1;
+            });
+        }
+
+        document.getElementById('add-candidate-btn').addEventListener('click', function() {
+            addCandidateRow('', '');
+        });
+
+        // --- Collect ---
+        function collectData() {
+            var engs = [];
+            document.querySelectorAll('.eng-card').forEach(function(card) {
+                var items = [];
+                card.querySelectorAll('.item-row').forEach(function(row) {
+                    items.push({
+                        label: row.querySelector('.label-input').value,
+                        text: row.querySelector('.text-input').value
+                    });
+                });
+                engs.push({
+                    num: card.querySelector('.eng-num-badge').textContent,
+                    title: card.querySelector('.eng-title').value,
+                    breton: card.querySelector('.eng-breton').value,
+                    items: items
+                });
+            });
+
+            var candidates = [];
+            document.querySelectorAll('#team-edit-body tr').forEach(function(tr, i) {
+                candidates.push({
+                    id: i + 1,
+                    name: tr.querySelector('.cand-name').value,
+                    info: tr.querySelector('.cand-info').value
+                });
+            });
+
+            var introHtml = quill.root.innerHTML;
+            if (introHtml === '<p><br></p>') introHtml = '';
+
+            return {
+                page_title:    document.getElementById('f-page-title').value,
+                hero_title:    document.getElementById('f-hero-title').value,
+                subtitle:      document.getElementById('f-subtitle').value,
+                intro_text:    introHtml,
+                engagements:   engs,
+                team_intro:    document.getElementById('f-team-intro').value,
+                candidates:    candidates,
+                footer_title:  document.getElementById('f-footer-title').value,
+                footer_text:   document.getElementById('f-footer-text').value,
+                highlight_box: document.getElementById('f-highlight-box').value
+            };
+        }
+
+        // --- Save ---
+        var saveBtn    = document.getElementById('save-btn');
+        var saveStatus = document.getElementById('save-status');
+
+        saveBtn.addEventListener('click', function() {
+            saveBtn.disabled = true;
+            saveStatus.className = 'save-status';
+            saveStatus.textContent = 'Sauvegarde…';
+
+            fetch('/bureau/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(collectData())
+            })
+            .then(function(resp) {
+                return resp.json().then(function(result) {
+                    if (resp.ok) {
+                        saveStatus.className = 'save-status ok';
+                        saveStatus.textContent = result.message || 'Sauvegardé !';
+                    } else {
+                        saveStatus.className = 'save-status err';
+                        saveStatus.textContent = result.error || 'Erreur.';
+                    }
+                });
+            })
+            .catch(function() {
+                saveStatus.className = 'save-status err';
+                saveStatus.textContent = 'Erreur réseau.';
+            })
+            .finally(function() {
+                saveBtn.disabled = false;
+                setTimeout(function() {
+                    saveStatus.textContent = '';
+                    saveStatus.className = 'save-status';
+                }, 4000);
+            });
+        });
+
+        // --- HTML escape helper ---
+        function esc(s) {
+            if (!s) return '';
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        // --- Init ---
+        loadData(initialData);
+    </script>
+</body>
+</html>
