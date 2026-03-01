@@ -258,7 +258,7 @@
             <button class="tab-btn" data-tab="engagements">Engagements</button>
             <button class="tab-btn" data-tab="equipe">Équipe</button>
         </div>
-        <a href="/bureau/logout" class="logout-link">Se déconnecter</a>
+        <a href="/logout" class="logout-link">Se déconnecter</a>
     </nav>
 
     <div class="editor-content">
@@ -509,7 +509,7 @@
             saveStatus.className = 'save-status';
             saveStatus.textContent = 'Sauvegarde…';
 
-            fetch('/bureau/save', {
+            fetch('/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(collectData())

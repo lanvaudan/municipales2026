@@ -113,13 +113,26 @@ func isAuthenticated(c *gin.Context) bool {
 	return ok
 }
 
+// authMiddleware redirects unauthenticated requests to /login (bureau subdomain root).
 func authMiddleware(c *gin.Context) {
 	if !isAuthenticated(c) {
-		c.Redirect(http.StatusFound, "/bureau/login")
+		c.Redirect(http.StatusFound, "/login")
 		c.Abort()
 		return
 	}
 	c.Next()
+}
+
+// extractSubdomain returns the first DNS label of the Host header (port stripped).
+func extractSubdomain(host string) string {
+	if idx := strings.LastIndex(host, ":"); idx != -1 {
+		host = host[:idx]
+	}
+	parts := strings.SplitN(host, ".", 2)
+	if len(parts) >= 2 {
+		return parts[0]
+	}
+	return host
 }
 
 func initDB() *sql.DB {
@@ -142,23 +155,12 @@ func initDB() *sql.DB {
 	return db
 }
 
-func main() {
-	loadEnv("../data/.env")
-	loadContent("../data/content.json")
-
-	db := initDB()
-	defer db.Close()
-
-	if os.Getenv("GIN_MODE") == "" {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
+// buildPublicRouter returns the router for the main campaign site.
+func buildPublicRouter(db *sql.DB) *gin.Engine {
 	r := gin.Default()
-
 	r.Static("/assets", "../assets")
 	r.LoadHTMLGlob("../templates/*")
 
-	// --- Main site ---
 	r.GET("/", func(c *gin.Context) {
 		contentMu.RLock()
 		content := siteContent
@@ -177,7 +179,6 @@ func main() {
 		})
 	})
 
-	// --- Subscribe ---
 	type SubscribeRequest struct {
 		Email string `json:"email" form:"email"`
 	}
@@ -214,20 +215,28 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"message": "Inscription réussie !"})
 	})
 
-	// --- Bureau ---
-	r.GET("/bureau", func(c *gin.Context) {
+	return r
+}
+
+// buildBureauRouter returns the router for the admin interface (bureau subdomain).
+// All routes are at the root level (no /bureau/ prefix).
+func buildBureauRouter() *gin.Engine {
+	r := gin.Default()
+	r.LoadHTMLGlob("../templates/*")
+
+	r.GET("/", func(c *gin.Context) {
 		if isAuthenticated(c) {
-			c.Redirect(http.StatusFound, "/bureau/edit")
+			c.Redirect(http.StatusFound, "/edit")
 		} else {
-			c.Redirect(http.StatusFound, "/bureau/login")
+			c.Redirect(http.StatusFound, "/login")
 		}
 	})
 
-	r.GET("/bureau/login", func(c *gin.Context) {
+	r.GET("/login", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "bureau_login.html", nil)
 	})
 
-	r.POST("/bureau/login", func(c *gin.Context) {
+	r.POST("/login", func(c *gin.Context) {
 		password := c.PostForm("password")
 		expected := os.Getenv("BUREAU_PASSWORD")
 		if expected == "" {
@@ -239,13 +248,13 @@ func main() {
 		}
 		token := newSession()
 		c.SetCookie("bureau_session", token, 86400, "/", "", false, true)
-		c.Redirect(http.StatusFound, "/bureau/edit")
+		c.Redirect(http.StatusFound, "/edit")
 	})
 
-	bureau := r.Group("/bureau")
-	bureau.Use(authMiddleware)
+	protected := r.Group("/")
+	protected.Use(authMiddleware)
 	{
-		bureau.GET("/edit", func(c *gin.Context) {
+		protected.GET("/edit", func(c *gin.Context) {
 			contentMu.RLock()
 			content := siteContent
 			contentMu.RUnlock()
@@ -255,13 +264,12 @@ func main() {
 			})
 		})
 
-		bureau.POST("/save", func(c *gin.Context) {
+		protected.POST("/save", func(c *gin.Context) {
 			var incoming PageContent
 			if err := c.ShouldBindJSON(&incoming); err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "JSON invalide"})
 				return
 			}
-			// Strip template injection attempts
 			incoming.IntroText = strings.ReplaceAll(incoming.IntroText, "{{", "")
 			incoming.IntroText = strings.ReplaceAll(incoming.IntroText, "}}", "")
 			contentMu.Lock()
@@ -274,15 +282,32 @@ func main() {
 			c.JSON(http.StatusOK, gin.H{"message": "Contenu sauvegardé."})
 		})
 
-		bureau.GET("/logout", func(c *gin.Context) {
+		protected.GET("/logout", func(c *gin.Context) {
 			cookie, err := c.Cookie("bureau_session")
 			if err == nil {
 				sessions.Delete(cookie)
 			}
 			c.SetCookie("bureau_session", "", -1, "/", "", false, true)
-			c.Redirect(http.StatusFound, "/bureau/login")
+			c.Redirect(http.StatusFound, "/login")
 		})
 	}
+
+	return r
+}
+
+func main() {
+	loadEnv("../data/.env")
+	loadContent("../data/content.json")
+
+	db := initDB()
+	defer db.Close()
+
+	if os.Getenv("GIN_MODE") == "" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	publicRouter := buildPublicRouter(db)
+	bureauRouter := buildBureauRouter()
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -290,7 +315,14 @@ func main() {
 	}
 
 	log.Printf("Serveur démarré sur http://localhost:%s\n", port)
-	if err := r.Run(":" + port); err != nil {
+	err := http.ListenAndServe(":"+port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if extractSubdomain(r.Host) == "bureau" {
+			bureauRouter.ServeHTTP(w, r)
+		} else {
+			publicRouter.ServeHTTP(w, r)
+		}
+	}))
+	if err != nil {
 		log.Fatal(err)
 	}
 }
