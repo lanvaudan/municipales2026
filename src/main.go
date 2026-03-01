@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -54,7 +55,6 @@ type PageContent struct {
 var (
 	contentMu   sync.RWMutex
 	siteContent PageContent
-	sessions    sync.Map
 )
 
 // --- Helpers ---
@@ -96,31 +96,34 @@ func saveContent(path string, c PageContent) error {
 	return os.WriteFile(path, data, 0644)
 }
 
-func newSession() string {
+func newSession(db *sql.DB) string {
 	b := make([]byte, 32)
 	rand.Read(b)
 	token := base64.URLEncoding.EncodeToString(b)
-	sessions.Store(token, true)
+	db.Exec(`INSERT INTO sessions(token) VALUES (?)`, token)
 	return token
 }
 
-func isAuthenticated(c *gin.Context) bool {
+func isAuthenticated(c *gin.Context, db *sql.DB) bool {
 	cookie, err := c.Cookie("bureau_session")
 	if err != nil {
 		return false
 	}
-	_, ok := sessions.Load(cookie)
-	return ok
+	var count int
+	db.QueryRow(`SELECT COUNT(*) FROM sessions WHERE token = ?`, cookie).Scan(&count)
+	return count > 0
 }
 
 // authMiddleware redirects unauthenticated requests to /login (bureau subdomain root).
-func authMiddleware(c *gin.Context) {
-	if !isAuthenticated(c) {
-		c.Redirect(http.StatusFound, "/login")
-		c.Abort()
-		return
+func authMiddleware(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if !isAuthenticated(c, db) {
+			c.Redirect(http.StatusFound, "/login")
+			c.Abort()
+			return
+		}
+		c.Next()
 	}
-	c.Next()
 }
 
 // extractSubdomain returns the first DNS label of the Host header (port stripped).
@@ -141,13 +144,19 @@ func initDB() *sql.DB {
 		log.Fatal(err)
 	}
 
-	createTableSQL := `CREATE TABLE IF NOT EXISTS subscribers (
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS subscribers (
 		"id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 		"email" TEXT UNIQUE,
 		"created_at" DATETIME DEFAULT CURRENT_TIMESTAMP
-	);`
+	)`)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	_, err = db.Exec(createTableSQL)
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS sessions (
+		"token" TEXT PRIMARY KEY,
+		"created_at" DATETIME DEFAULT CURRENT_TIMESTAMP
+	)`)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -220,12 +229,12 @@ func buildPublicRouter(db *sql.DB) *gin.Engine {
 
 // buildBureauRouter returns the router for the admin interface (bureau subdomain).
 // All routes are at the root level (no /bureau/ prefix).
-func buildBureauRouter() *gin.Engine {
+func buildBureauRouter(db *sql.DB) *gin.Engine {
 	r := gin.Default()
 	r.LoadHTMLGlob("../templates/*")
 
 	r.GET("/", func(c *gin.Context) {
-		if isAuthenticated(c) {
+		if isAuthenticated(c, db) {
 			c.Redirect(http.StatusFound, "/edit")
 		} else {
 			c.Redirect(http.StatusFound, "/login")
@@ -246,13 +255,13 @@ func buildBureauRouter() *gin.Engine {
 			c.HTML(http.StatusUnauthorized, "bureau_login.html", gin.H{"Error": "Mot de passe incorrect."})
 			return
 		}
-		token := newSession()
+		token := newSession(db)
 		c.SetCookie("bureau_session", token, 86400, "/", "", false, true)
 		c.Redirect(http.StatusFound, "/edit")
 	})
 
 	protected := r.Group("/")
-	protected.Use(authMiddleware)
+	protected.Use(authMiddleware(db))
 	{
 		protected.GET("/edit", func(c *gin.Context) {
 			contentMu.RLock()
@@ -282,10 +291,28 @@ func buildBureauRouter() *gin.Engine {
 			c.JSON(http.StatusOK, gin.H{"message": "Contenu sauvegardé."})
 		})
 
+		protected.GET("/emails.csv", func(c *gin.Context) {
+			rows, err := db.Query("SELECT email FROM subscribers ORDER BY created_at")
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Erreur base de données"})
+				return
+			}
+			defer rows.Close()
+			c.Header("Content-Type", "text/csv; charset=utf-8")
+			c.Header("Content-Disposition", `attachment; filename="emails_lanvaudan.csv"`)
+			for rows.Next() {
+				var email string
+				if err := rows.Scan(&email); err != nil {
+					continue
+				}
+				fmt.Fprintln(c.Writer, email)
+			}
+		})
+
 		protected.GET("/logout", func(c *gin.Context) {
 			cookie, err := c.Cookie("bureau_session")
 			if err == nil {
-				sessions.Delete(cookie)
+				db.Exec(`DELETE FROM sessions WHERE token = ?`, cookie)
 			}
 			c.SetCookie("bureau_session", "", -1, "/", "", false, true)
 			c.Redirect(http.StatusFound, "/login")
@@ -307,7 +334,7 @@ func main() {
 	}
 
 	publicRouter := buildPublicRouter(db)
-	bureauRouter := buildBureauRouter()
+	bureauRouter := buildBureauRouter(db)
 
 	port := os.Getenv("PORT")
 	if port == "" {
