@@ -231,6 +231,7 @@ func buildPublicRouter(db *sql.DB) *gin.Engine {
 // All routes are at the root level (no /bureau/ prefix).
 func buildBureauRouter(db *sql.DB) *gin.Engine {
 	r := gin.Default()
+	r.Static("/assets", "../assets")
 	r.LoadHTMLGlob("../templates/*")
 
 	r.GET("/", func(c *gin.Context) {

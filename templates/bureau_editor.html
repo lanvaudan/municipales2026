@@ -16,12 +16,15 @@
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: var(--bg-color);
+            background: var(--bg-color) url(/assets/fond.jpg) no-repeat fixed center center;
             color: var(--text-color);
             font-family: 'Montserrat', sans-serif;
             padding-top: 56px;
             padding-bottom: 64px;
             min-height: 100vh;
+        }
+        #quill-editor {
+            background: #fff;
         }
 
         /* --- Top bar --- */
@@ -267,11 +270,11 @@
         <!-- TAB: Textes -->
         <div id="panel-textes" class="tab-panel active">
             <div class="field-group">
-                <label>Titre de page (balise h1)</label>
+                <label>Titre de la page</label>
                 <input type="text" id="f-page-title">
             </div>
             <div class="field-group">
-                <label>Titre principal (hero)</label>
+                <label>Titre principal (en avant)</label>
                 <input type="text" id="f-hero-title">
             </div>
             <div class="field-group">
@@ -279,11 +282,11 @@
                 <input type="text" id="f-subtitle">
             </div>
             <div class="field-group">
-                <label>Texte d'introduction (riche)</label>
+                <label>Texte général d'introduction</label>
                 <div id="quill-editor"></div>
             </div>
             <div class="field-group">
-                <label>Intro équipe</label>
+                <label>Intro sur l'équipe</label>
                 <input type="text" id="f-team-intro">
             </div>
             <div class="field-group">
@@ -295,7 +298,7 @@
                 <textarea id="f-footer-text"></textarea>
             </div>
             <div class="field-group">
-                <label>Encart highlight</label>
+                <label>Encart de conclusion</label>
                 <input type="text" id="f-highlight-box">
             </div>
         </div>

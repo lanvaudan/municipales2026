@@ -19,3 +19,6 @@ else
     echo "❌ Erreur lors de la compilation."
     exit 1
 fi
+
+# Optionnel, pour notre setup:
+bin/service.sh

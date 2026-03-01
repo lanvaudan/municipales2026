@@ -37,7 +37,7 @@
         }
 
         body {
-            background-color: var(--bg-color);
+            background: var(--bg-color) url(/assets/fond.jpg) no-repeat fixed center center;
             color: var(--text-color);
             font-family: 'Montserrat', sans-serif;
             line-height: 1.6;
@@ -383,7 +383,7 @@
             background-color: #c4880b;
         }
 
-        @media (max-width: 1099px) {
+        @media (max-width: 1099px) or (max-height: 600px) {
             .page-wrapper {
                 padding-bottom: 80px;
                 /* Space for the fixed footer */
