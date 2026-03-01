@@ -132,6 +132,10 @@
         }
 
         @media (max-width: 699px) {
+	    .candidate-num {
+	    	display: none;
+	    }
+
             .main-content {
                 padding: 0;
             }
@@ -139,7 +143,7 @@
             .container-blanc {
                 margin-bottom: 0;
                 border-radius: 0;
-                padding: 1.5rem 1rem;
+                padding: 30px;
                 box-shadow: none;
             }
         }
@@ -386,8 +390,8 @@
             }
 
             .sidebar {
-                padding-bottom: 0;
-                /* Remove extra padding if any */
+		padding-bottom: 28px;
+		background: #fff;
             }
 
             .subscribe-form {
@@ -605,7 +609,7 @@
                     <table class="team-table reveal">
                         <thead>
                             <tr>
-                                <th>N°</th>
+                                <th class="candidate-num">N°</th>
                                 <th>Nom & Prénom</th>
                                 <th>Profession & Lieu-dit</th>
                             </tr>
